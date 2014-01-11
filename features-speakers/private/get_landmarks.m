@@ -2,7 +2,7 @@ function [P, pconf, PCONF, mirror] = get_landmarks(I , fd)
 %GET_LANDMARKS detects facial features in image I for face fd
 
 
-datapath = '/sequoia/data1/bojanows/thesis/AutoNaChar/data';
+datapath = '/home/jaivalis/UvA/ProjectAI/face-pipeline-master/models/';
 
 
 % load the model files

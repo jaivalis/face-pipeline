@@ -11,7 +11,7 @@ function tracks_to_facedets(result_dir, model_dir, dump_string, s1, s2)
 load(fullfile(model_dir, 'W.mat'));
 load(fullfile(model_dir, 'pose_cor.mat'));
 
-listing = dir(fullfile(result_dir,  sprintf('%06d_%06d_processedtrack.txt', s1, s2)));
+listing = dir(fullfile(result_dir,  sprintf('%9d_%9d_processedtrack.txt', s1, s2)));
 
 f   = [];
 rect    = [];
@@ -37,6 +37,10 @@ for i = 1:length(listing)
 end
 
 deva_poses = -90:15:90;
+
+if isempty(rect)
+   return; % no faces found, noop 
+end
 
 for i = 1:length(deva_poses)
     temp_pose = deva_poses(i);
@@ -69,7 +73,7 @@ for i = permutation(1:10)
     rectangle('Position', box, 'EdgeColor', 'red', 'LineWidth', 2);
     hold off;
     drawnow;
-    pause(0.3);
+%     pause(0.3);
 end
 
 facedets = struct(  'frame', num2cell(f), ...

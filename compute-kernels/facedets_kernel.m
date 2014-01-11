@@ -5,6 +5,8 @@ load(fullfile(result_dir, 'facedets.mat'));
 track = cat(1, facedets.track);
 utrack = unique(track);
 
+
+
 n = length(utrack);
 
 pose = cat(1, facedets.pose);
@@ -16,6 +18,8 @@ profile = pose~=1;
 % working on frontal faces
 idx = (frontal & pconf > 0);
 facedets_f = facedets(idx);
+
+% siftdescriptors of the frontal faces of track1
 S = cat(2, facedets_f.dSIFT);
 d = size(S, 1);
 K = d / 128;
@@ -84,6 +88,6 @@ dfp = single(dfp);
 
 K = sum_kernel(cat(3, dff, dfp), 1);
 
-save(fullfile(result_dir, 'kernel.mat'), 'K');
+save(fullfile(result_dir, 'kernel.mat'), K);
 
 end

@@ -8,7 +8,6 @@ max_        = 0;
 begin_frame = 0;
 end_frame   = 0;
 id          = 0;
-scene_end   = 0;
 
 for i = 1:size(shots, 2)
     s1 = shots(1, i);
@@ -17,16 +16,7 @@ for i = 1:size(shots, 2)
     % load facedets of this shot
     load(fullfile(result_dir,sprintf('%09d_%09d_facedets.mat', s1, s2)));
 
-    for k = 1:length(facedets)
-
-        if facedets(k).frame == s1
-            scene_begin = k;
-        end
-        if facedets(k).frame == s2
-            scene_end   = k;
-        end
-
-        track = cat(1, facedets(scene_begin:scene_end).track);
+        track = cat(1, facedets).track);
         utrack = unique(track);
         num_actors = length(utrack);
 
@@ -42,7 +32,6 @@ for i = 1:size(shots, 2)
                 end_frame   = s2;
             end
         end
-    end
 end
 
 end

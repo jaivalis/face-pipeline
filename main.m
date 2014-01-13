@@ -12,7 +12,7 @@ addpath('compute-kernels');
 
 run(vl_feat_path);
 
-dump_string = fullfile(dump_dir, '%9d.jpg');
+dump_string = fullfile(dump_dir, '%09d.jpg');
 model_dir   = 'models';
 result_dir  = 'results';
 
@@ -20,8 +20,8 @@ if ~exist(result_dir, 'dir')
     mkdir(result_dir);
 end
 
-s1  = 1000000001;
-s2  = 1000002686;
+s1  = 000000001;
+s2  = 000001532;
 
 % face_detection(result_dir, model_dir, dump_string, s1, s2);
 % fprintf('face_detection complete\n');
@@ -29,10 +29,10 @@ s2  = 1000002686;
 % detect_shots(result_dir, dump_string, s1, s2);
 % fprintf('detect_shots complete\n');
 % 
-% track_in_shots(result_dir, -0.6, dump_string);
-% fprintf('track_in_shots complete\n');
+track_in_shots(result_dir, -0.6, dump_string);
+fprintf('track_in_shots complete\n');
 
-tracks_to_facedets_in_shots(result_dir, model_dir, dump_string);
+tracks_to_facedets(result_dir, model_dir, dump_string, s1, s2);
 fprintf('tracks_to_facedets complete\n');
 
 features_and_speakers(result_dir, model_dir, dump_string);

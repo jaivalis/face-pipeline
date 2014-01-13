@@ -3,7 +3,7 @@ function tracks_to_facedets_in_shots( result_dir, model_dir, dump_string )
 %   Detailed explanation goes here
 
 shotpath = fullfile(result_dir, 'shots.txt');
-shots   = read_shots(shotpath);
+shots    = read_shots(shotpath);
 
 for i = 1:size(shots, 2)
     s1 = shots(1, i);

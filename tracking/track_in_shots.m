@@ -3,13 +3,13 @@ function track_in_shots(result_dir, conf_thresh, dump_string)
 shotpath = fullfile(result_dir, 'shots.txt');
 shots   = read_shots(shotpath);
 
-det_string = fullfile(result_dir, '%06d.mat');
+det_string = fullfile(result_dir, '%09d.mat');
 
 for i = 1:size(shots, 2)
     s1 = shots(1, i);
     s2 = shots(2, i);
     
-    shotString = sprintf('%06d_%06d', s1, s2);
+    shotString = sprintf('%09d_%09d', s1, s2);
     
     %%% DETECTION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     detfname    = sprintf('%s_dets.txt', shotString);

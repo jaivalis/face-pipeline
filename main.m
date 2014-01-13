@@ -29,13 +29,13 @@ s2  = 000001532;
 % detect_shots(result_dir, dump_string, s1, s2);
 % fprintf('detect_shots complete\n');
 % 
-track_in_shots(result_dir, -0.6, dump_string);
-fprintf('track_in_shots complete\n');
+% track_in_shots(result_dir, -0.6, dump_string);
+% fprintf('track_in_shots complete\n');
 
-tracks_to_facedets(result_dir, model_dir, dump_string, s1, s2);
-fprintf('tracks_to_facedets complete\n');
+% tracks_to_facedets_in_shots(result_dir, model_dir, dump_string);
+% fprintf('tracks_to_facedets complete\n');
 
-features_and_speakers(result_dir, model_dir, dump_string);
+features_and_speakers_in_shots(result_dir, model_dir, dump_string);
 fprintf('features_and_speakers complete\n');
 
 % probably the confusion matrix?

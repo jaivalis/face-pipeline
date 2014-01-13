@@ -21,7 +21,6 @@ fd().pconf = [];
 fd().PCONF = [];
 fd().mirror = [];
 
-
 frame   = cat(1, fd.frame);
 
 f = unique(frame);
@@ -31,7 +30,7 @@ set(1, 'Name', 'Facial Landmarks');
 
 fprintf('Extracting Facial Features...\n' );
 for i = f'
-    fprintf('working on frame %06d... \n', i);    
+    fprintf('working on frame %09d... \n', i);    
     
     impath = sprintf(dumpfile, i);
     I = imread(impath);

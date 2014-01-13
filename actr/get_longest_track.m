@@ -23,17 +23,18 @@ for i = 1:size(shots, 2)
             scene_begin = k;
         end
         if facedets(k).frame == s2
-            scene_end = k;
+            scene_end   = k;
         end
 
         track = cat(1, facedets(scene_begin:scene_end).track);
         utrack = unique(track);
         num_actors = length(utrack);
 
-        for j=1:num_actors
-            faceActor = track == j;
-            facedets_J = facedets(faceActor);
-            length_J = length(facedets_J);
+        for j = 1:num_actors
+            faceActor   = track == j;
+            facedets_J  = facedets(faceActor);
+            length_J    = length(facedets_J);
+            
             if length_J > max_
                 max_        = length_J;
                 id          = j;

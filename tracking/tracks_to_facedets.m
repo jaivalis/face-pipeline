@@ -13,7 +13,7 @@ load(fullfile(model_dir, 'pose_cor.mat'));
 
 listing = dir(fullfile(result_dir,  sprintf('%9d_%9d_processedtrack.txt', s1, s2)));
 
-f   = [];
+f       = [];
 rect    = [];
 pose    = [];
 trackid = [];
@@ -38,9 +38,9 @@ end
 
 deva_poses = -90:15:90;
 
-if isempty(rect)
-   return; % no faces found, noop 
-end
+% if isempty(rect)
+%    return; % no faces found, noop
+% end
 
 for i = 1:length(deva_poses)
     temp_pose = deva_poses(i);
@@ -53,8 +53,8 @@ end
 rect = rect(:, [1,3,2,4]);
 
 % sorting in frames
-[~,id] = sort(f);
-f   = f(id, :);
+[~, id] = sort(f);
+f       = f(id, :);
 rect    = rect(id, :);
 pose    = pose(id, :);
 trackid = trackid(id, :);
@@ -73,7 +73,7 @@ for i = permutation(1:10)
     rectangle('Position', box, 'EdgeColor', 'red', 'LineWidth', 2);
     hold off;
     drawnow;
-%     pause(0.3);
+    pause(0.1);
 end
 
 facedets = struct(  'frame', num2cell(f), ...

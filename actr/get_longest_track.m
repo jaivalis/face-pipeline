@@ -4,8 +4,6 @@ function [ begin_frame, end_frame, id ] = get_longest_track( result_dir  )
 shotpath = fullfile(result_dir,'shots.txt');
 shots = read_shots(shotpath);
 
-load(fullfile(result_dir,'facedets.mat'));
-
 max_        = 0;
 begin_frame = 0;
 end_frame   = 0;
@@ -15,6 +13,9 @@ scene_end   = 0;
 for i = 1:size(shots, 2)
     s1 = shots(1, i);
     s2 = shots(2, i);
+    
+    % load facedets of this shot
+    load(fullfile(result_dir,sprintf('%09d_%09d_facedets.mat', s1, s2)));
 
     for k = 1:length(facedets)
 

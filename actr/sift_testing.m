@@ -18,17 +18,22 @@ for i = 1:length(shots)
     track = cat(1, facedets.track);
     utrack = unique(track);
     num_tracks = length(utrack);
+    actors_identified = [];
+    actors_identified_ind = 1;
     
     for m = 1 : num_tracks
         min_act     = 0;
         min_diff    = intmax('int32');
         faceActor   = track == utrack(m);
         facedets_M  = facedets(faceActor);
-        length_this = length(facedets_M)
-        length_all = length_all + length_this
         actor_candidate = sift_actor(facedets_M);
+        
+        % for each not identified actor
         for j = 1:index-1
             actr = actors(j);
+                if ismember(j, actors_identified);
+                    continue;
+                end
             diff = actr.get_model_diff(actor_candidate);
             if diff < threshold
                 if diff < min_diff
@@ -38,17 +43,18 @@ for i = 1:length(shots)
             end
         end
         if min_act ~= 0
-            actors(min_act).appearance_time
-            actor_candidate.appearance_time
-            actors(min_act).train(actor_candidate);
-            actors(min_act).appearance_time
+            actors(min_act) = actors(min_act).train(actor_candidate);
+            actors_identified(actors_identified_ind) = min_act;
+            actors_identified_ind = actors_identified_ind + 1;
         else
-            actor_candidate.appearance_time
             actors(index) = actor_candidate;
-            actors(index).appearance_time
             index         = index + 1;
+            actors_identified(actors_identified_ind) = index;
+            actors_identified_ind = actors_identified_ind + 1;
         end
-        'blb';
-%         t = cat();
     end
+    % end of shot
+    clearvars actors_identified;
 end
+
+actors(10).show_faces();

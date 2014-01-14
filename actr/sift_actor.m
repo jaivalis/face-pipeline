@@ -4,6 +4,7 @@ classdef sift_actor < actor
     
     properties 
         appearance_time 	    % defined in actor
+        faces
         
         sift_average_frontal    % average of sifts used
         sift_average_profile    % 
@@ -17,6 +18,12 @@ classdef sift_actor < actor
             track_facedets_frontal = track_facedets(frontal);
             track_facedets_profile = track_facedets(profile);
             
+            image_num   = track_facedets(1).frame;
+            face_rect   = track_facedets(1).rect;
+            face(1:4,1) = face_rect';
+            face(5,1)   = image_num;
+            
+            obj.faces            = face; 
             obj.appearance_time  = length( track_facedets(profile) ) ...
                                  + length( track_facedets(frontal) );
             
@@ -57,8 +64,9 @@ classdef sift_actor < actor
                 obj.sift_average_profile = obj.sift_average_profile / (newTime);
             end
             
+            new_faces = other.faces;
+            obj.faces = cat(2, obj.faces, new_faces);
             obj.appearance_time = newTime;
-            '';
         end
         
         function diff = get_model_diff( obj, other )
@@ -74,6 +82,19 @@ classdef sift_actor < actor
                 frontal_diff = sum(d);
             end
             diff = min(frontal_diff, profile_diff);
+        end
+        
+        function show_faces( obj )
+           num_faces = size(obj.faces, 2);
+           for i = 1:num_faces
+               face_rect = obj.faces(1:4, i);
+               image_num = obj.faces(5, i);
+               img = imread(sprintf('./dump/%09d.jpg', image_num));
+               face = imcrop(img, [face_rect(1) face_rect(3) face_rect(2) ...
+                    - face_rect(1) face_rect(4) - face_rect(3)] );
+               subplot(8, 8, i);
+               imshow(face);
+           end
         end
     end
     

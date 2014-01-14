@@ -2,8 +2,9 @@ classdef actor
 %ACTOR
 %
 
-    properties (Abstract)
+    properties (Abstract, Access = public)
         appearance_time   % expressed in frame count
+        faces
     end
     
     methods 

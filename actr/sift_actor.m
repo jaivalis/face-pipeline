@@ -2,7 +2,7 @@ classdef sift_actor < actor
     %SIFT_ACTOR Summary of this class goes here
     %   Detailed explanation goes here
     
-    properties
+    properties 
         appearance_time 	    % defined in actor
         
         sift_average_frontal    % average of sifts used
@@ -41,9 +41,9 @@ classdef sift_actor < actor
             end
         end
         
-        function train( obj, other )
+        function obj = train( obj, other )
             prevTime = obj.appearance_time;
-            newTime  = obj.appearance_time + other.appearance_time; 
+            newTime  = obj.appearance_time + other.appearance_time;
             
             if ~isempty( obj.sift_average_frontal ) && ~isempty( other.sift_average_frontal )
                 obj.sift_average_frontal = obj.sift_average_frontal * prevTime ...
@@ -58,6 +58,7 @@ classdef sift_actor < actor
             end
             
             obj.appearance_time = newTime;
+            '';
         end
         
         function diff = get_model_diff( obj, other )
@@ -72,7 +73,7 @@ classdef sift_actor < actor
                 d = abs(obj.sift_average_profile - other.sift_average_profile );
                 frontal_diff = sum(d);
             end
-            diff = min(frontal_diff, profile_diff)
+            diff = min(frontal_diff, profile_diff);
         end
     end
     

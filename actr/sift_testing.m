@@ -57,4 +57,4 @@ for i = 1:length(shots)
     clearvars actors_identified;
 end
 
-actors(10).show_faces();
+actors(1).show_faces();

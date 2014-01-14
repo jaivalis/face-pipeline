@@ -26,4 +26,21 @@ classdef actor
         % + other: actor to compare with
     end
     
+    methods
+        function show_faces( obj )
+        %SHOW_FACES Plot the faces used for training the actor classifier
+           num_faces = size(obj.faces, 2);
+           for i = 1:num_faces
+               face_rect = obj.faces(1:4, i);
+               image_num = obj.faces(5, i);
+               img = imread(sprintf('./dump/%09d.jpg', image_num));
+               face = imcrop(img, [face_rect(1) face_rect(3) face_rect(2) ...
+                    - face_rect(1) face_rect(4) - face_rect(3)] );
+               subplot(8, 8, i);
+               imshow(face);
+           end
+        end
+
+    end
+    
 end

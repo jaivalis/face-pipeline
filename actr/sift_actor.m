@@ -3,8 +3,8 @@ classdef sift_actor < actor
     %   Detailed explanation goes here
     
     properties 
-        appearance_time 	    % defined in actor
-        faces
+        appearance_time 	    % inherited from actor
+        faces                   % inherited from actor
         
         sift_average_frontal    % average of sifts used
         sift_average_profile    % 
@@ -52,16 +52,24 @@ classdef sift_actor < actor
             prevTime = obj.appearance_time;
             newTime  = obj.appearance_time + other.appearance_time;
             
-            if ~isempty( obj.sift_average_frontal ) && ~isempty( other.sift_average_frontal )
-                obj.sift_average_frontal = obj.sift_average_frontal * prevTime ...
-                    + other.sift_average_frontal * other.appearance_time;
-                obj.sift_average_frontal = obj.sift_average_frontal / (newTime);
+            if ~isempty( other.sift_average_frontal )
+                if isempty( obj.sift_average_frontal )
+                    obj.sift_average_frontal = other.sift_average_frontal;
+                else                
+                    obj.sift_average_frontal = obj.sift_average_frontal * prevTime ...
+                        + other.sift_average_frontal * other.appearance_time;
+                    obj.sift_average_frontal = obj.sift_average_frontal / (newTime);
+                end
             end
             
-            if ~isempty( obj.sift_average_profile ) && ~isempty( other.sift_average_profile ) 
-                obj.sift_average_profile = obj.sift_average_profile * prevTime ...
-                    + other.sift_average_profile * other.appearance_time;
-                obj.sift_average_profile = obj.sift_average_profile / (newTime);
+            if ~isempty( other.sift_average_profile )
+                if isempty( obj.sift_average_profile )
+                    obj.sift_average_profile = other.sift_average_profile;
+                else
+                    obj.sift_average_profile = obj.sift_average_profile * prevTime ...
+                        + other.sift_average_profile * other.appearance_time;
+                    obj.sift_average_profile = obj.sift_average_profile / (newTime);
+                end
             end
             
             new_faces = other.faces;
@@ -84,18 +92,6 @@ classdef sift_actor < actor
             diff = min(frontal_diff, profile_diff);
         end
         
-        function show_faces( obj )
-           num_faces = size(obj.faces, 2);
-           for i = 1:num_faces
-               face_rect = obj.faces(1:4, i);
-               image_num = obj.faces(5, i);
-               img = imread(sprintf('./dump/%09d.jpg', image_num));
-               face = imcrop(img, [face_rect(1) face_rect(3) face_rect(2) ...
-                    - face_rect(1) face_rect(4) - face_rect(3)] );
-               subplot(8, 8, i);
-               imshow(face);
-           end
-        end
     end
     
 end

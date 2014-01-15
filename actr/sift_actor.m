@@ -87,7 +87,7 @@ classdef sift_actor < actor
             profile_diff = intmax('int32');
             if ~isempty( obj.sift_average_profile ) && ~isempty( other.sift_average_profile ) 
                 d = abs(obj.sift_average_profile - other.sift_average_profile );
-                frontal_diff = sum(d);
+                profile_diff = sum(d);
             end
             diff = min(frontal_diff, profile_diff);
         end

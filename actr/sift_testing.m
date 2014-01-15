@@ -7,7 +7,7 @@ index = 1;
 count = 0;
 length_all = 0;
 
-threshold = 84;
+threshold = 3.5;
 for i = 1:length(shots)
     s1 = shots(1, i);
     s2 = shots(2, i);
@@ -26,7 +26,7 @@ for i = 1:length(shots)
         min_diff    = intmax('int32');
         faceActor   = track == utrack(m);
         facedets_M  = facedets(faceActor);
-        actor_candidate = sift_actor(facedets_M);
+        actor_candidate = sift_actor_conf(facedets_M);
         
         % for each not identified actor
         for j = 1:index-1
@@ -57,4 +57,8 @@ for i = 1:length(shots)
     clearvars actors_identified;
 end
 
-actors(1).show_faces();
+for r = 1:length(actors)
+    clf;
+    actors(r).show_faces();
+    pause(1.1);
+end

@@ -1,3 +1,13 @@
+% choose siftactor type
+siftactor_tpye = 'siftactor';
+threshold = 3.1;
+% 
+% siftactor_tpye = 'siftactor_conf';
+% threshold = 3.6;
+% 
+% siftactor_tpye = 'siftactor_average';
+% threshold = 85;
+
 result_dir = 'results';
 
 shotpath = fullfile(result_dir,'shots.txt');
@@ -7,7 +17,7 @@ index = 1;
 count = 0;
 length_all = 0;
 
-threshold = 3.5;
+
 for i = 1:length(shots)
     s1 = shots(1, i);
     s2 = shots(2, i);
@@ -18,22 +28,27 @@ for i = 1:length(shots)
     track = cat(1, facedets.track);
     utrack = unique(track);
     num_tracks = length(utrack);
-    actors_identified = [];
-    actors_identified_ind = 1;
     
     for m = 1 : num_tracks
         min_act     = 0;
         min_diff    = intmax('int32');
         faceActor   = track == utrack(m);
         facedets_M  = facedets(faceActor);
-        actor_candidate = sift_actor_conf(facedets_M);
+        c = siftactor_tpye;
+        switch siftactor_tpye
+            case 'siftactor'
+                actor_candidate = sift_actor(facedets_M);
+            case 'siftactor_conf'
+                actor_candidate = sift_actor_conf(facedets_M);
+            case 'siftactor_average'
+                actor_candidate = sift_actor_average(facedets_M);
+            otherwise
+                'wrong siftactor type'
+        end
         
-        % for each not identified actor
+        % for each actor
         for j = 1:index-1
             actr = actors(j);
-                if ismember(j, actors_identified);
-                    continue;
-                end
             diff = actr.get_model_diff(actor_candidate);
             if diff < threshold
                 if diff < min_diff
@@ -44,17 +59,12 @@ for i = 1:length(shots)
         end
         if min_act ~= 0
             actors(min_act) = actors(min_act).train(actor_candidate);
-            actors_identified(actors_identified_ind) = min_act;
-            actors_identified_ind = actors_identified_ind + 1;
         else
             actors(index) = actor_candidate;
             index         = index + 1;
-            actors_identified(actors_identified_ind) = index;
-            actors_identified_ind = actors_identified_ind + 1;
         end
     end
     % end of shot
-    clearvars actors_identified;
 end
 
 for r = 1:length(actors)

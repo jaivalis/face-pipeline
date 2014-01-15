@@ -3,23 +3,28 @@ classdef sift_actor < actor
     %   Detailed explanation goes here
     
     properties 
-        appearance_time 	    % inherited from actor
-        faces                   % inherited from actor
+        appearance_time 	    % defined in actor
+        faces
         
-        sift_average_frontal    % average of sifts used
-        sift_average_profile    % 
+        sifts_frontal    % average of sifts used
+        sifts_profile    % 
     end
     
     methods
-        function obj = sift_actor( track_facedets )
+        function obj = sift_actor( track_facedets )            
             pose                   = cat(1, track_facedets.pose);
             frontal                = (pose == 1);
             profile                = (pose ~= 1);
             track_facedets_frontal = track_facedets(frontal);
             track_facedets_profile = track_facedets(profile);
             
-            image_num   = track_facedets(1).frame;
-            face_rect   = track_facedets(1).rect;
+            if length(track_facedets_frontal) > 1
+                image_num   = track_facedets_frontal(1).frame;
+                face_rect   = track_facedets_frontal(1).rect;
+            else
+                image_num   = track_facedets(1).frame;
+                face_rect   = track_facedets(1).rect; 
+            end
             face(1:4,1) = face_rect';
             face(5,1)   = image_num;
             
@@ -28,23 +33,13 @@ classdef sift_actor < actor
                                  + length( track_facedets(frontal) );
             
             if ~isempty( track_facedets_frontal )
-                face_cat = cat(2, track_facedets_frontal.dSIFT);
-                if length(track_facedets_frontal) > 1
-                    average_f = sum(face_cat')'/length(track_facedets_frontal);
-                else
-                    average_f = track_facedets_frontal.dSIFT;
-                end
-                obj.sift_average_frontal = average_f;
+                front_sifts = cat(2, track_facedets_frontal.dSIFT);
+                obj.sifts_frontal = front_sifts;
             end
             
             if ~isempty( track_facedets_profile )
-                face_cat = cat(2,track_facedets_profile.dSIFT);
-                if length(track_facedets_profile) > 1
-                    average_p = sum(face_cat')' / length(track_facedets_profile);
-                else
-                    average_p = track_facedets_profile.dSIFT;
-                end
-                obj.sift_average_profile = average_p;
+                prof_sifts = cat(2, track_facedets_profile.dSIFT);
+                obj.sifts_profile = prof_sifts;
             end
         end
         
@@ -52,24 +47,12 @@ classdef sift_actor < actor
             prevTime = obj.appearance_time;
             newTime  = obj.appearance_time + other.appearance_time;
             
-            if ~isempty( other.sift_average_frontal )
-                if isempty( obj.sift_average_frontal )
-                    obj.sift_average_frontal = other.sift_average_frontal;
-                else                
-                    obj.sift_average_frontal = obj.sift_average_frontal * prevTime ...
-                        + other.sift_average_frontal * other.appearance_time;
-                    obj.sift_average_frontal = obj.sift_average_frontal / (newTime);
-                end
+            if ~isempty( other.sifts_frontal )
+                obj.sifts_frontal = cat(2, obj.sifts_frontal, other.sifts_frontal) ;
             end
             
-            if ~isempty( other.sift_average_profile )
-                if isempty( obj.sift_average_profile )
-                    obj.sift_average_profile = other.sift_average_profile;
-                else
-                    obj.sift_average_profile = obj.sift_average_profile * prevTime ...
-                        + other.sift_average_profile * other.appearance_time;
-                    obj.sift_average_profile = obj.sift_average_profile / (newTime);
-                end
+            if ~isempty( other.sifts_profile ) 
+                obj.sifts_profile = cat(2, obj.sifts_profile, other.sifts_profile) ;
             end
             
             new_faces = other.faces;
@@ -78,20 +61,45 @@ classdef sift_actor < actor
         end
         
         function diff = get_model_diff( obj, other )
-            frontal_diff = intmax('int32');
-            if ~isempty( obj.sift_average_frontal ) && ~isempty( other.sift_average_frontal )
-                d = abs(obj.sift_average_frontal - other.sift_average_frontal );
-                frontal_diff = sum(d);
+            diff = 200;
+            if ~isempty( obj.sifts_frontal ) && ~isempty( other.sifts_frontal )
+                min = intmax('int32');
+                for i = 1 : size(obj.sifts_frontal, 2)
+                    % nearest-point search; find nearest face
+                    [~,d] = dsearchn(other.sifts_frontal', obj.sifts_frontal(:, i)');
+                    if d < min
+                        min = d;
+                    end
+                end
+                diff = min;
+            else
+                % only compare profile faces if frontal face is missing
+                if ~isempty( obj.sifts_profile ) && ~isempty( other.sifts_profile )
+                    min = intmax('int32');
+                    for i = 1 : size(obj.sifts_profile, 2)
+                        % nearest-point search; find nearest face
+                        [~,d] = dsearchn(other.sifts_profile', obj.sifts_profile(:, i)');
+                        if d < min
+                            min = d;
+                        end
+                    end
+                    diff = min;
+                end
             end
-            
-            profile_diff = intmax('int32');
-            if ~isempty( obj.sift_average_profile ) && ~isempty( other.sift_average_profile ) 
-                d = abs(obj.sift_average_profile - other.sift_average_profile );
-                profile_diff = sum(d);
-            end
-            diff = min(frontal_diff, profile_diff);
         end
         
+        function show_faces( obj )
+           num_faces = size(obj.faces, 2);
+           for i = 1:num_faces
+               face_rect = obj.faces(1:4, i);
+               image_num = obj.faces(5, i);
+               img = imread(sprintf('./dump/%09d.jpg', image_num));
+               face = imcrop(img, [face_rect(1) face_rect(3) face_rect(2) ...
+                    - face_rect(1) face_rect(4) - face_rect(3)] );
+               subplot(4, 4, i);
+               imshow(face);
+           end
+        end
     end
     
 end

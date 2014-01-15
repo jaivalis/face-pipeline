@@ -41,21 +41,21 @@ classdef svm_actor < actor
                 dSifts              = cat( 2, track_facedets_front.dSIFT );
                 obj.front_training_data   = dSifts;
                 obj.front_training_labels = ones(size(dSifts, 2), 1);
-                obj.front_svm = svmtrain( obj.front_training_labels, dSifts', '-b 1 -q' );
+                obj.front_svm = svmtrain( obj.front_training_labels, dSifts', '-b 0 -q' );
             end
             
             if ~isempty( track_facedets_side1 )
                 dSifts        = cat( 2, track_facedets_side1.dSIFT );
                 obj.side1_training_data   = dSifts;
                 obj.side1_training_labels = ones(size(dSifts, 2), 1);
-                obj.side1_svm = svmtrain( obj.side1_training_labels, dSifts', '-b 1 -q' );
+                obj.side1_svm = svmtrain( obj.side1_training_labels, dSifts', '-b 0 -q' );
             end
             
             if ~isempty( track_facedets_side2 )
                 dSifts        = cat( 2, track_facedets_side2.dSIFT );
-                obj.side1_training_data   = dSifts;
-                obj.side1_training_labels = ones(size(dSifts, 2), 1);
-                obj.side1_svm = svmtrain( obj.side1_training_labels, dSifts', '-b 1 -q' );
+                obj.side2_training_data   = dSifts;
+                obj.side2_training_labels = ones(size(dSifts, 2), 1);
+                obj.side2_svm = svmtrain( obj.side2_training_labels, dSifts', '-b 0 -q' );
             end
         end
         
@@ -82,7 +82,8 @@ classdef svm_actor < actor
                 
                 new_label = ones(1, size(dSifts, 2)) * label;
                 obj.front_training_labels = cat( 1, obj.front_training_labels, new_label' );
-                obj.front_svm = svmtrain( obj.front_training_labels, obj.front_training_data', '-b 1 -q' );
+                obj.front_svm = svmtrain( obj.front_training_labels, obj.front_training_data', '-b 0 -q' );
+                'b';
             end
             
             if side1_other_count > 0
@@ -96,7 +97,7 @@ classdef svm_actor < actor
                 
                 new_label = ones(1, size(dSifts, 2)) * label;
                 obj.side1_training_labels = cat( 1, obj.side1_training_labels, new_label' );
-                obj.side1_svm = svmtrain( obj.side1_training_labels, obj.side1_training_data', '-b 1 -q' );
+                obj.side1_svm = svmtrain( obj.side1_training_labels, obj.side1_training_data', '-b 0 -q' );
             end
             
             if side2_other_count > 0
@@ -110,7 +111,7 @@ classdef svm_actor < actor
                 
                 new_label = ones(1, size(dSifts, 2)) * label;
                 obj.side2_training_labels = cat( 1, obj.side2_training_labels, new_label' );
-                obj.side2_svm = svmtrain( obj.side2_training_labels, obj.side2_training_data', '-b 1 -q' );
+                obj.side2_svm = svmtrain( obj.side2_training_labels, obj.side2_training_data', '-b 0 -q' );
             end
             
             if label == 1
@@ -138,33 +139,34 @@ classdef svm_actor < actor
             side1_pred = 0;
             side2_pred = 0;
             if front_obj_count > 0 && front_other_count > 0
-                label_v = rand( track_facedets_front, 1);
+                label_v = zeros( size(track_facedets_front, 2), 1);
 
                 % TODO use prob_est
                 [labl, ~, prob_est] = ...
-                  svmpredict(label_v, track_facedets_front, obj.front_svm , '-b 1 -q');
+                  svmpredict(label_v, track_facedets_front, obj.front_svm , '-b 0 -q');
                 
                 front_pred = sum(labl) / front_other_count;
             end
             
             if side1_obj_count > 0 && side1_other_count > 0
-                label_v = rand(length(track_facedets_side1), 1);
+                label_v = zeros(size(track_facedets_side1, 2), 1);
                 
                 [labl, ~, prob_est] = ...
-                  svmpredict(label_v, track_facedets_side1, obj.front_svm , '-b 1 -q');
+                  svmpredict(label_v, track_facedets_side1, obj.side1_svm , '-b 0 -q');
               
                 side1_pred = sum(labl) / front_other_count;
             end
             
-            if side1_obj_count > 0 && side2_other_count > 0
-                label_v = rand(length(track_facedets_side2), 1);
+            if side2_obj_count > 0 && side2_other_count > 0
+                label_v = zeros(size(track_facedets_side2, 2), 1);
                 
                 [labl, ~, prob_est] = ...
-                  svmpredict(label_v, track_facedets_side2, obj.front_svm , '-b 1 -q');
+                  svmpredict(label_v, track_facedets_side2, obj.side2_svm , '-b 0 -q');
                 
                 side2_pred = sum(labl) / front_other_count;
             end
             
+            % TODO: think about score
             confidence = front_pred*.6 + side1_pred*.2 + side2_pred*.2;
             diff = 1 - confidence;
         end

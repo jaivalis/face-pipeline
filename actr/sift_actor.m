@@ -11,7 +11,7 @@ classdef sift_actor < actor
     end
     
     methods
-        function obj = sift_actor( track_facedets )            
+        function obj = sift_actor( track_facedets )
             pose                   = cat(1, track_facedets.pose);
             frontal                = (pose == 1);
             profile                = (pose ~= 1);

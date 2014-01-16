@@ -60,6 +60,54 @@ classdef sift_actor < actor
             obj.appearance_time = newTime;
         end
         
+        function [diff, actors_tree] = compare_models( obj, all )
+            index = 1;
+            l = length(all);
+            diff = ones(l, 2) * 200;
+            for track = 1:l
+                if ~isempty( obj.sifts_frontal ) && ~isempty( all(track).sifts_frontal )
+                    min = intmax('int32');
+                    for i = 1 : size(obj.sifts_frontal, 2)
+                        % nearest-point search; find nearest face
+                        [~,d] = dsearchn(all(track).sifts_frontal', obj.sifts_frontal(:, i)');
+                        if d < min
+                            min = d;
+                        end
+                    end
+                    diff(index, 1) = min;
+                    diff(index, 2) = track;
+                else
+                    % only compare profile faces if frontal face is missing
+                    if ~isempty( obj.sifts_profile ) && ~isempty( all(track).sifts_profile )
+                        min = intmax('int32');
+                        for i = 1 : size(obj.sifts_profile, 2)
+                            % nearest-point search; find nearest face
+                            [~,d] = dsearchn(all(track).sifts_profile', obj.sifts_profile(:, i)');
+                            if d < min
+                                min = d;
+                            end
+                        end
+                        diff(index, 1) = min;
+                        diff(index, 2) = track;
+                    end
+                end
+                % some models can't be compared yet, since only frontal or only
+                % profile exist. Compare after merging again?
+                % TODO: think about a way to work around this
+                if diff(index, 1) == 200
+                    diff(index, 2) = track;
+                end
+                index = index + 1;
+            end
+            % sort diff
+            diff = sortrows(diff, 1);
+            % delete first row, since the difference of a model with itself
+            % is zero and we only want to compare with all other models
+            diff = diff(2:l,:);
+            actors_tree = diff(:, 2);
+            diff = diff(:, 1);
+        end
+        
         function diff = get_model_diff( obj, other )
             diff = 200;
             if ~isempty( obj.sifts_frontal ) && ~isempty( other.sifts_frontal )

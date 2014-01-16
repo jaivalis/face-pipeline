@@ -1,12 +1,16 @@
 % choose siftactor type
-siftactor_tpye = 'siftactor';
-threshold = 3.1;
+% siftactor_tpye = 'siftactor';
+% threshold = 3.1;
 % 
 % siftactor_tpye = 'siftactor_conf';
 % threshold = 3.6;
 % 
-% siftactor_tpye = 'siftactor_average';
-% threshold = 85;
+siftactor_tpye = 'siftactor_average';
+threshold = 85;
+
+% choose learning mode
+% learning = 'online';
+learning = 'offline';
 
 result_dir = 'results';
 
@@ -49,11 +53,13 @@ for i = 1:length(shots)
         % for each actor
         for j = 1:index-1
             actr = actors(j);
-            diff = actr.get_model_diff(actor_candidate);
-            if diff < threshold
-                if diff < min_diff
-                    min_diff = diff;
-                    min_act  = j;
+            if strcmp(learning, 'online')
+                diff = actr.get_model_diff(actor_candidate);
+                if diff < threshold
+                    if diff < min_diff
+                        min_diff = diff;
+                        min_act  = j;
+                    end
                 end
             end
         end
@@ -67,8 +73,15 @@ for i = 1:length(shots)
     % end of shot
 end
 
-for r = 1:length(actors)
-    clf;
-    actors(r).show_faces();
-    pause(1.1);
+if strcmp(learning, 'offline')
+    num_actors = length(actors);
+    for i = 1:num_actors
+        [diff(:, i), act(:, i)] = actors(i).compare_models(actors);
+    end
 end
+
+% for r = 1:length(actors)
+%     clf;
+%     actors(r).show_faces();
+%     pause(1.1);
+% end

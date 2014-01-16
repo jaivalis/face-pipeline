@@ -24,6 +24,13 @@ classdef actor
         % INPUT
         % + obj  : this
         % + other: actor to compare with
+        
+        compare_models( obj, other )
+        %COMPARE_MODELS compare two siftactors and return sorted confidence
+        % vector
+        % INPUT
+        % + obj  : this
+        % + other: actors to compare with
     end
     
     methods

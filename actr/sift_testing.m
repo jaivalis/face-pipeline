@@ -1,4 +1,4 @@
-% clear all;
+clear all;
 
 % choose siftactor type
 % siftactor_tpye = 'siftactor';
@@ -13,7 +13,7 @@ threshold = 3.6;
 % choose learning mode
 % learning = 'online';
 learning = 'offline';
-comp_type = 'weighted_conf';
+comp_type = '';
 
 result_dir = 'results';
 
@@ -50,7 +50,7 @@ for i = 1:length(shots)
             case 'siftactor_average'
                 actor_candidate = sift_actor_average(facedets_M);
             otherwise
-                'wrong siftactor type'
+                fprintf('wrong siftactor type.\n')
         end
         
         % for each actor
@@ -89,7 +89,7 @@ end
 %% assign
 % if cost is too big, all actors are merged into one
 % if cost is too low, there won't be merges at all
-cost = 1.9;
+cost = 2.1;
 [actor_pairs, unmerged_actors, ~] = assignDetectionsToTracks(diff, cost);
 while size(actor_pairs, 1) ~= 0
     % merge assigned actors-pairs
@@ -102,10 +102,10 @@ while size(actor_pairs, 1) ~= 0
             a = actors(actor_pairs(i,2));
             b = actors(actor_pairs(i,1));
             merged_actors(num_merges + 1) = a.merge(b);
-            merged(index) = actor_pairs(i, 1);
-            merged(index + 1) = actor_pairs(i, 2);
-            num_merges = num_merges + 1;
-            index = index + 2;
+            merged(index)                 = actor_pairs(i, 1);
+            merged(index + 1)             = actor_pairs(i, 2);
+            num_merges        = num_merges + 1;
+            index             = index + 2;
         end
     end
     fprintf('# of merges: %d\n', num_merges);
@@ -113,9 +113,11 @@ while size(actor_pairs, 1) ~= 0
 %     for i = 1:length(unmerged_actors)
 %         merged_actors(num_merges + i) = actors(unmerged_actors(i));
 %     end
+    ind = 1;
     for i = 1:length(actors)
         if ~ismember(i, merged)
-            merged_actors(num_merges + i) = actors(i);
+            merged_actors(num_merges + ind) = actors(i);
+            ind = ind + 1;
         end
     end
     clear actors;
@@ -130,7 +132,7 @@ while size(actor_pairs, 1) ~= 0
     end
 
     % call hungarian algorithm for assignment again
-    cost = cost - 0.2; % cost of non-assignment
+    cost = cost - 0.18; % cost of non-assignment
     [actor_pairs, unmerged_actors, ~] = assignDetectionsToTracks(diff, cost);
     actors = merged_actors;
 end

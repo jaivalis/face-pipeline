@@ -135,11 +135,10 @@ classdef sift_actor_conf < actor
                 end
                 index = index + 1;
             end
+            % find 0 in diff and replace it with 200
+            zer = find(diff(:, 1) == 0);
+            diff(zer) = 200;
             if strcmp(comp_type, 'weighted_conf')
-                diff = sortrows(diff, 1);
-                % multiply diagonale with 200, since we don't want to match
-                % actor with himself
-                diff(1, 1) = 200;
                 % sort diff
                 diff = sortrows(diff, 1);
                 % multiply groups of 5 with weight

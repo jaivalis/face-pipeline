@@ -135,7 +135,8 @@ classdef sift_actor_average < actor
             diff = sortrows(diff, 1);
             % delete first row, since the difference of a model with itself
             % is zero and we only want to compare with all other models
-            diff = diff(2:l,:);
+            % diff = diff(2:l,:);
+            diff(1, 1) = 200;
             actors_tree = diff(:, 2);
             diff = diff(:, 1);
         end

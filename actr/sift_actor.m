@@ -6,7 +6,7 @@ classdef sift_actor < actor
         appearance_time 	    % defined in actor
         faces
         
-        sifts_frontal    % average of sifts used
+        sifts_frontal    % matrix containing all frontal sifts of track
         sifts_profile    % 
     end
     
@@ -100,10 +100,11 @@ classdef sift_actor < actor
                 index = index + 1;
             end
             % sort diff
-            diff = sortrows(diff, 1);
+            % diff = sortrows(diff, 1);
             % delete first row, since the difference of a model with itself
             % is zero and we only want to compare with all other models
-            diff = diff(2:l,:);
+            % diff = diff(2:l,:);
+            %diff(1, 1) = 200;
             actors_tree = diff(:, 2);
             diff = diff(:, 1);
         end
@@ -134,6 +135,27 @@ classdef sift_actor < actor
                     diff = min;
                 end
             end
+        end
+        
+        function obj = merge( obj, other )
+            % merge sifts
+            o_sifts_f = other.sifts_frontal;
+            o_sifts_p = other.sifts_profile;
+            if ~isempty( o_sifts_f )
+                front_sifts = cat(2, obj.sifts_frontal, o_sifts_f);
+                obj.sifts_frontal = front_sifts;
+            end
+            
+            if ~isempty( o_sifts_p )
+                prof_sifts = cat(2, obj.sifts_profile, o_sifts_p);
+                obj.sifts_profile = prof_sifts;
+            end
+            
+            % sum appearance time
+            obj.appearance_time = obj.appearance_time + other.appearance_time;
+            
+            % add faces
+            obj.faces = cat(2, obj.faces, other.faces);
         end
         
         function show_faces( obj )

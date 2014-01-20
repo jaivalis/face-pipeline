@@ -25,9 +25,15 @@ classdef actor
         % + obj  : this
         % + other: actor to compare with
         
-        compare_models( obj, other )
+        compare_models( obj, other ) %TODO remove this method
         %COMPARE_MODELS compare two siftactors and return sorted confidence
         % vector
+        % INPUT
+        % + obj  : this
+        % + other: actors to compare with
+        
+        merge( obj, other )
+        %MERGE Merges two actors to a new actor object
         % INPUT
         % + obj  : this
         % + other: actors to compare with
@@ -43,8 +49,9 @@ classdef actor
                img = imread(sprintf('./dump/%09d.jpg', image_num));
                face = imcrop(img, [face_rect(1) face_rect(3) face_rect(2) ...
                     - face_rect(1) face_rect(4) - face_rect(3)] );
-               subplot(8, 8, i);
+               subplot(ceil(num_faces/ 2) , 2, i);
                imshow(face);
+               title(sprintf('App time %d', obj.appearance_time));
            end
         end
 

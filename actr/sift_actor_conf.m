@@ -6,12 +6,13 @@ classdef sift_actor_conf < actor
         appearance_time 	    % defined in actor
         faces
         
-        sift_max_conf_frontal    % average of sifts used
-        sift_max_conf_profile    % 
+        sift_frontal    % sifts of face with hightest confidence of track
+        sift_profile    % 
     end
     
     methods
-        function obj = sift_actor_conf( track_facedets )            
+        function obj = sift_actor_conf( track_facedets )
+            tr = track_facedets;
             pose                   = cat(1, track_facedets.pose);
             frontal                = (pose == 1);
             profile                = (pose ~= 1);
@@ -36,14 +37,14 @@ classdef sift_actor_conf < actor
                 face_conf = cat(1, track_facedets_frontal.conf);
                 max_conf = find(face_conf ==(max(max(face_conf))));
                 
-                obj.sift_max_conf_frontal(:, 1) = track_facedets_frontal(max_conf).dSIFT;
+                obj.sift_frontal(:, 1) = track_facedets_frontal(max_conf).dSIFT;
             end
             
             if ~isempty( track_facedets_profile )
                 face_conf = cat(1, track_facedets_profile.conf);
                 max_conf = find(face_conf ==(max(max(face_conf))));
                 
-                obj.sift_max_conf_profile(:, 1) = track_facedets_profile(max_conf).dSIFT;
+                obj.sift_profile(:, 1) = track_facedets_profile(max_conf).dSIFT;
             end
         end
         
@@ -51,14 +52,14 @@ classdef sift_actor_conf < actor
             prevTime = obj.appearance_time;
             newTime  = obj.appearance_time + other.appearance_time;
             
-            if ~isempty( other.sift_max_conf_frontal )
-                ins = size(obj.sift_max_conf_frontal, 2);
-                obj.sift_max_conf_frontal(:, ins + 1) = other.sift_max_conf_frontal;
+            if ~isempty( other.sift_frontal )
+                ins = size(obj.sift_frontal, 2);
+                obj.sift_frontal(:, ins + 1) = other.sift_frontal;
             end
             
-            if ~isempty( other.sift_max_conf_profile ) 
-                ins = size(obj.sift_max_conf_profile, 2);
-                obj.sift_max_conf_profile(:, ins + 1) = other.sift_max_conf_profile;
+            if ~isempty( other.sift_profile ) 
+                ins = size(obj.sift_profile, 2);
+                obj.sift_profile(:, ins + 1) = other.sift_profile;
             end
             
             new_faces = other.faces;
@@ -68,11 +69,11 @@ classdef sift_actor_conf < actor
         
         function diff = get_model_diff( obj, other )
             diff = 200;
-            if ~isempty( obj.sift_max_conf_frontal ) && ~isempty( other.sift_max_conf_frontal )
+            if ~isempty( obj.sift_frontal ) && ~isempty( other.sift_frontal )
                 min = intmax('int32');
-                for i = 1 : size(obj.sift_max_conf_frontal, 2)
+                for i = 1 : size(obj.sift_frontal, 2)
                     % nearest-point search; find nearest face
-                    [~,d] = dsearchn(other.sift_max_conf_frontal', obj.sift_max_conf_frontal(:, i)');
+                    [~,d] = dsearchn(other.sift_frontal', obj.sift_frontal(:, i)');
                     if d < min
                         min = d;
                     end
@@ -81,11 +82,11 @@ classdef sift_actor_conf < actor
             else
                 % only compare profile faces if there's a frontal face
                 % missing
-                if ~isempty( obj.sift_max_conf_profile ) && ~isempty( other.sift_max_conf_profile )
+                if ~isempty( obj.sift_profile ) && ~isempty( other.sift_profile )
                     min = intmax('int32');
-                    for i = 1 : size(obj.sift_max_conf_profile, 2)
+                    for i = 1 : size(obj.sift_profile, 2)
                         % nearest-point search; find nearest face
-                        [~,d] = dsearchn(other.sift_max_conf_profile', obj.sift_max_conf_profile(:, i)');
+                        [~,d] = dsearchn(other.sift_profile', obj.sift_profile(:, i)');
                         if d < min
                             min = d;
                         end
@@ -100,11 +101,11 @@ classdef sift_actor_conf < actor
             l = length(all);
             diff = ones(l, 2) * 200;
             for track = 1:l
-                if ~isempty( obj.sift_max_conf_frontal ) && ~isempty( all(track).sift_max_conf_frontal )
+                if ~isempty( obj.sift_frontal ) && ~isempty( all(track).sift_frontal )
                     min = intmax('int32');
-                    for i = 1 : size(obj.sift_max_conf_frontal, 2)
+                    for i = 1 : size(obj.sift_frontal, 2)
                         % nearest-point search; find nearest face
-                        [~,d] = dsearchn(all(track).sift_max_conf_frontal', obj.sift_max_conf_frontal(:, i)');
+                        [~,d] = dsearchn(all(track).sift_frontal', obj.sift_frontal(:, i)');
                         if d < min
                             min = d;
                         end
@@ -113,11 +114,11 @@ classdef sift_actor_conf < actor
                     diff(index, 2) = track;
                 else
                     % only compare profile faces if frontal face is missing
-                    if ~isempty( obj.sift_max_conf_profile ) && ~isempty( all(track).sift_max_conf_profile )
+                    if ~isempty( obj.sift_profile ) && ~isempty( all(track).sift_profile )
                         min = intmax('int32');
-                        for i = 1 : size(obj.sift_max_conf_profile, 2)
+                        for i = 1 : size(obj.sift_profile, 2)
                             % nearest-point search; find nearest face
-                            [~,d] = dsearchn(all(track).sift_max_conf_profile', obj.sift_max_conf_profile(:, i)');
+                            [~,d] = dsearchn(all(track).sift_profile', obj.sift_profile(:, i)');
                             if d < min
                                 min = d;
                             end
@@ -135,25 +136,34 @@ classdef sift_actor_conf < actor
                 index = index + 1;
             end
             % sort diff
-            diff = sortrows(diff, 1);
+            % diff = sortrows(diff, 1);
             % delete first row, since the difference of a model with itself
             % is zero and we only want to compare with all other models
-            diff = diff(2:l,:);
+            % diff = diff(2:l,:);
             actors_tree = diff(:, 2);
             diff = diff(:, 1);
         end
+
         
-        function show_faces( obj )
-           num_faces = size(obj.faces, 2);
-           for i = 1:num_faces
-               face_rect = obj.faces(1:4, i);
-               image_num = obj.faces(5, i);
-               img = imread(sprintf('./dump/%09d.jpg', image_num));
-               face = imcrop(img, [face_rect(1) face_rect(3) face_rect(2) ...
-                    - face_rect(1) face_rect(4) - face_rect(3)] );
-               subplot(4, 4, i);
-               imshow(face);
-           end
+        function obj = merge( obj, other )
+            % merge sifts
+            o_sifts_f = other.sift_frontal;
+            o_sifts_p = other.sift_profile;
+            if ~isempty( o_sifts_f )
+                front_sifts = cat(2, obj.sift_frontal, o_sifts_f);
+                obj.sift_frontal = front_sifts;
+            end
+            
+            if ~isempty( o_sifts_p )
+                prof_sifts = cat(2, obj.sift_profile, o_sifts_p);
+                obj.sift_profile = prof_sifts;
+            end
+            
+            % sum appearance time
+            obj.appearance_time = obj.appearance_time + other.appearance_time;
+            
+            % add faces
+            obj.faces = cat(2, obj.faces, other.faces);
         end
     end
     

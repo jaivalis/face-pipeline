@@ -49,9 +49,8 @@ classdef actor
                img = imread(sprintf('./dump/%09d.jpg', image_num));
                face = imcrop(img, [face_rect(1) face_rect(3) face_rect(2) ...
                     - face_rect(1) face_rect(4) - face_rect(3)] );
-               subplot(ceil(num_faces/ 2) , 2, i);
+               subplot(ceil(num_faces/ 4) , 4, i);
                imshow(face);
-               title(sprintf('App time %d', obj.appearance_time));
            end
         end
 

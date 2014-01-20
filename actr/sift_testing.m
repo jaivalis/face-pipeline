@@ -1,4 +1,4 @@
-clear all;
+% clear all;
 
 % choose siftactor type
 % siftactor_tpye = 'siftactor';
@@ -13,6 +13,7 @@ threshold = 3.6;
 % choose learning mode
 % learning = 'online';
 learning = 'offline';
+comp_type = 'weighted_conf';
 
 result_dir = 'results';
 
@@ -78,19 +79,17 @@ end
 if strcmp(learning, 'offline')
     num_actors = length(actors);
     for i = 1:num_actors
-        [diff(:, i), ~] = actors(i).compare_models(actors);
+        [diff(:, i), ~] = actors(i).compare_models(actors, comp_type);
     end
 end
 
-% diagonal of diff is the own actor, we don't want to assign those to each
-% other
-diff(logical(eye(size(diff)))) = 200;
 
 
 
-
-%% assign 
-cost = 1.5;
+%% assign
+% if cost is too big, all actors are merged into one
+% if cost is too low, there won't be merges at all
+cost = 1.9;
 [actor_pairs, unmerged_actors, ~] = assignDetectionsToTracks(diff, cost);
 while size(actor_pairs, 1) ~= 0
     % merge assigned actors-pairs
@@ -98,20 +97,26 @@ while size(actor_pairs, 1) ~= 0
     num_merges = 0;
     merged = [];
     index = 1;
-    for i = 1:length(actor_pairs)
+    for i = 1:size(actor_pairs, 1)
         if ~ismember(actor_pairs(i, 1), merged) && ~ismember(actor_pairs(i, 2), merged)
             a = actors(actor_pairs(i,2));
             b = actors(actor_pairs(i,1));
-            merged_actors(index) = a.merge(b);
+            merged_actors(num_merges + 1) = a.merge(b);
             merged(index) = actor_pairs(i, 1);
+            merged(index + 1) = actor_pairs(i, 2);
             num_merges = num_merges + 1;
-            index = index + 1;
+            index = index + 2;
         end
     end
     fprintf('# of merges: %d\n', num_merges);
     % append unmerged actors to merged actors
-    for i = 1:length(unmerged_actors)
-        merged_actors(num_merges + i) = actors(unmerged_actors(i));
+%     for i = 1:length(unmerged_actors)
+%         merged_actors(num_merges + i) = actors(unmerged_actors(i));
+%     end
+    for i = 1:length(actors)
+        if ~ismember(i, merged)
+            merged_actors(num_merges + i) = actors(i);
+        end
     end
     clear actors;
     actors = merged_actors;
@@ -120,15 +125,12 @@ while size(actor_pairs, 1) ~= 0
         clear diff;
         num_actors = length(actors);
         for i = 1:num_actors
-            [diff(:, i), ~] = actors(i).compare_models(actors);
+            [diff(:, i), ~] = actors(i).compare_models(actors, comp_type);
         end
     end
 
-    % diagonal of diff is the own actor, we don't want to assign those to each
-    % other
-    diff(logical(eye(size(diff)))) = 200;
     % call hungarian algorithm for assignment again
-    % cost = cost - 0.1; % cost of non-assignment
+    cost = cost - 0.2; % cost of non-assignment
     [actor_pairs, unmerged_actors, ~] = assignDetectionsToTracks(diff, cost);
     actors = merged_actors;
 end
@@ -139,11 +141,4 @@ for r = 1:size(merged_actors, 2)
     clf;
     merged_actors(r).show_faces();
     pause(1.1);
-end
-
-%%
-for r = 1:size(actors, 2)
-    clf;
-    actors(r).show_faces();
-    pause(0.6);
 end

@@ -100,11 +100,11 @@ classdef sift_actor < actor
                 index = index + 1;
             end
             % sort diff
-            % diff = sortrows(diff, 1);
+            diff = sortrows(diff, 1);
             % delete first row, since the difference of a model with itself
             % is zero and we only want to compare with all other models
             % diff = diff(2:l,:);
-            %diff(1, 1) = 200;
+            diff(1, 1) = 200;
             actors_tree = diff(:, 2);
             diff = diff(:, 1);
         end

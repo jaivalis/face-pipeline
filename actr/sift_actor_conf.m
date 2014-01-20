@@ -96,7 +96,7 @@ classdef sift_actor_conf < actor
             end
         end
         
-        function [diff, actors_tree] = compare_models( obj, all )
+        function [diff, actors_tree] = compare_models( obj, all, comp_type )
             index = 1;
             l = length(all);
             diff = ones(l, 2) * 200;
@@ -135,11 +135,22 @@ classdef sift_actor_conf < actor
                 end
                 index = index + 1;
             end
-            % sort diff
-            % diff = sortrows(diff, 1);
-            % delete first row, since the difference of a model with itself
-            % is zero and we only want to compare with all other models
-            % diff = diff(2:l,:);
+            if strcmp(comp_type, 'weighted_conf')
+                diff = sortrows(diff, 1);
+                % multiply diagonale with 200, since we don't want to match
+                % actor with himself
+                diff(1, 1) = 200;
+                % sort diff
+                diff = sortrows(diff, 1);
+                % multiply groups of 5 with weight
+                weight = 0.8;
+                for p = 1:size(diff, 1)
+                    if mod(p - 1, 3) == 0
+                        weight = weight + 0.2;
+                    end
+                    diff(p, 1) = diff(p, 1) * weight;
+                end
+            end
             actors_tree = diff(:, 2);
             diff = diff(:, 1);
         end

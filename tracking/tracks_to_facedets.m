@@ -3,6 +3,7 @@ function tracks_to_facedets(result_dir, model_dir, dump_string, s1, s2)
 %       fd.frame
 %       fd.rect [x1 x2 y1 y2]
 %       fd.pose
+%       fd.head_pose
 
 % in the tracks file the bbox is as [x1 y1 x2 y2]
 % in the warping is a function of   [x1 y1 x2 y2]
@@ -18,6 +19,7 @@ rect    = [];
 pose    = [];
 trackid = [];
 conf    = [];
+head_pose = [];
 
 last_track = 0;
 
@@ -30,6 +32,7 @@ for i = 1:length(listing)
         f   = cat(1, f, [tracks.frame]');
         rect    = cat(1, rect, cat(1,tracks.rect));
         pose    = cat(1, pose, [tracks.pose]');
+        head_pose = cat(1, pose, [tracks.pose]');
         conf    = cat(1, conf, [tracks.conf]');
         
         last_track = max(trackid);
@@ -59,6 +62,7 @@ rect    = rect(id, :);
 pose    = pose(id, :);
 trackid = trackid(id, :);
 conf    = conf(id, :);
+head_pose = head_pose(id, :);
 
 % plotting a few frames for checking
 permutation = randperm(length(f));
@@ -67,20 +71,22 @@ for i = permutation(1:10)
     box = [r(1) r(3) r(2)-r(1)+1 r(4)-r(3)+1];
     
     
-    clf;
-    imshow(sprintf(dump_string, f(i)));
-    hold on;
-    rectangle('Position', box, 'EdgeColor', 'red', 'LineWidth', 2);
-    hold off;
-    drawnow;
-    pause(0.1);
+%     clf;
+%     imshow(sprintf('dump/%09d.jpg', f(i)));
+%     hold on;
+%     rectangle('Position', box, 'EdgeColor', 'red', 'LineWidth', 2);
+%     hold off;
+%     drawnow;
+    % pause(0.1);
 end
 
 facedets = struct(  'frame', num2cell(f), ...
     'rect', num2cell(rect',1)', ...
     'pose', num2cell(pose), ...
     'track', num2cell(trackid), ...
-    'conf', num2cell(conf));
+    'conf', num2cell(conf), ...
+    'head_pose', num2cell(head_pose));
+
 
 facedetfname    = sprintf('%09d_%09d_facedets.mat', s1, s2);
 facedetpath     = fullfile(result_dir, facedetfname);

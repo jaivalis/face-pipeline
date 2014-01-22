@@ -1,4 +1,4 @@
-clear all;
+% clear all;
 
 % choose siftactor type
 % siftactor_tpye = 'siftactor';
@@ -12,16 +12,17 @@ threshold = 3.6;
 
 % choose learning mode
 % learning = 'online';
-learning = 'offline';
-comp_type = '';
+learning   = 'offline';
+comp_type  = '';
 
 result_dir = 'results';
 
 shotpath = fullfile(result_dir,'shots.txt');
 shots = read_shots(shotpath);
 
-index = 1;
-count = 0;
+index      = 1;
+d_index    = 1;
+count      = 0;
 length_all = 0;
 
 
@@ -69,72 +70,94 @@ for i = 1:length(shots)
         if min_act ~= 0
             actors(min_act) = actors(min_act).train(actor_candidate);
         else
-            actors(index) = actor_candidate;
-            index         = index + 1;
+            % eliminate low confidence actors
+            if actor_candidate.pconf_avg < -10
+                discarded(d_index) = actor_candidate;
+                d_index            = d_index + 1;
+            else
+                actors(index) = actor_candidate;
+                index         = index + 1;
+            end
         end
     end
     % end of shot
 end
 
-if strcmp(learning, 'offline')
-    num_actors = length(actors);
-    for i = 1:num_actors
-        [diff(:, i), ~] = actors(i).compare_models(actors, comp_type);
-    end
-end
+diff_types_params = [ 50, 0.5;
+                     80, -25];
+diff_types = [ 'min-min';
+               'average'];
 
+for diff_type = 1 : 2
 
-
-
-%% assign
-% if cost is too big, all actors are merged into one
-% if cost is too low, there won't be merges at all
-cost = 2.1;
-[actor_pairs, unmerged_actors, ~] = assignDetectionsToTracks(diff, cost);
-while size(actor_pairs, 1) ~= 0
-    % merge assigned actors-pairs
-    clear merged_actors;
-    num_merges = 0;
-    merged = [];
-    index = 1;
-    for i = 1:size(actor_pairs, 1)
-        if ~ismember(actor_pairs(i, 1), merged) && ~ismember(actor_pairs(i, 2), merged)
-            a = actors(actor_pairs(i,2));
-            b = actors(actor_pairs(i,1));
-            merged_actors(num_merges + 1) = a.merge(b);
-            merged(index)                 = actor_pairs(i, 1);
-            merged(index + 1)             = actor_pairs(i, 2);
-            num_merges        = num_merges + 1;
-            index             = index + 2;
-        end
-    end
-    fprintf('# of merges: %d\n', num_merges);
-    % append unmerged actors to merged actors
-%     for i = 1:length(unmerged_actors)
-%         merged_actors(num_merges + i) = actors(unmerged_actors(i));
-%     end
-    ind = 1;
-    for i = 1:length(actors)
-        if ~ismember(i, merged)
-            merged_actors(num_merges + ind) = actors(i);
-            ind = ind + 1;
-        end
-    end
-    clear actors;
-    actors = merged_actors;
-    % compute model difference again
     if strcmp(learning, 'offline')
-        clear diff;
         num_actors = length(actors);
         for i = 1:num_actors
-            [diff(:, i), ~] = actors(i).compare_models(actors, comp_type);
+            diff = get_diff_matrix(actors, diff_types(diff_type, 1:7));
         end
     end
 
-    % call hungarian algorithm for assignment again
-    cost = cost - 0.18; % cost of non-assignment
+
+
+
+    %% assign
+    % if cost is too big, all actors are merged into one
+    % if cost is too low, there won't be merges at all
+    cost = diff_types_params( diff_type, 1);
     [actor_pairs, unmerged_actors, ~] = assignDetectionsToTracks(diff, cost);
-    actors = merged_actors;
+    while size(actor_pairs, 1) ~= 0
+        % merge assigned actors-pairs
+        clear merged_actors;
+        num_merges = 0;
+        merged = [];
+        index = 1;
+        for i = 1:size(actor_pairs, 1)
+            if ~ismember(actor_pairs(i, 1), merged) && ~ismember(actor_pairs(i, 2), merged)
+                a = actors(actor_pairs(i,2));
+                b = actors(actor_pairs(i,1));
+                merged_actors(num_merges + 1) = a.merge(b);
+                merged(index)                 = actor_pairs(i, 1);
+                merged(index + 1)             = actor_pairs(i, 2);
+                num_merges        = num_merges + 1;
+                index             = index + 2;
+            end
+        end
+        fprintf('# of %s merges: %d\n', diff_types(diff_type, 1:7), num_merges);
+        % append unmerged actors to merged actors
+    %     for i = 1:length(unmerged_actors)
+    %         merged_actors(num_merges + i) = actors(unmerged_actors(i));
+    %     end
+        ind = 1;
+        for i = 1:length(actors)
+            if ~ismember(i, merged)
+                merged_actors(num_merges + ind) = actors(i);
+                ind = ind + 1;
+            end
+        end
+        clear actors;
+        actors = merged_actors;
+        clear avg_f;
+        clear avg_p;
+        %% compare actors based on total differences: compare each sift
+        % with each sift of other actors
+    %     for a = 1:size(actors, 2)
+    %         [avg_f(:, a), avg_p(:, a)] = actors(a).get_model_average_diff(actors);
+    %     end
+    %     'blba';
+
+        %% compute model difference again
+        if strcmp(learning, 'offline')
+            clear diff;
+            num_actors = length(actors);
+            diff = get_diff_matrix(actors, diff_types(diff_type, 1:7));
+            a =1;
+        end
+
+        % call hungarian algorithm for assignment again
+        cost = cost - cost/4; % cost of non-assignment
+        [actor_pairs, unmerged_actors, ~] = assignDetectionsToTracks(diff, cost);
+        actors = merged_actors;
+    end
 end
 fprintf('done')
 

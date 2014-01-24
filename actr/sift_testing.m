@@ -83,12 +83,16 @@ for i = 1:length(shots)
     % end of shot
 end
 
-diff_types_params = [ 50, 0.5;
-                     80, -25];
+diff_types_params = [ 37, 4;
+                      16, 7;
+                      15, 8;
+                       0, 0];
 diff_types = [ 'min-min';
-               'average'];
+               'average';
+               'frontal';
+               'eyenose'];
 
-for diff_type = 1 : 2
+for diff_type = 1 : size(diff_types, 1)
 
     if strcmp(learning, 'offline')
         num_actors = length(actors);
@@ -154,7 +158,7 @@ for diff_type = 1 : 2
         end
 
         % call hungarian algorithm for assignment again
-        cost = cost - cost/4; % cost of non-assignment
+        cost = cost - cost / diff_types_params( diff_type , 2); % cost of non-assignment
         [actor_pairs, unmerged_actors, ~] = assignDetectionsToTracks(diff, cost);
         actors = merged_actors;
     end
@@ -167,3 +171,10 @@ for r = 1:size(merged_actors, 2)
     merged_actors(r).show_faces();
     pause(1.1);
 end
+%%
+% figure;
+% for r = 1:size(discarded, 2)
+%     clf;
+%     discarded(r).show_faces();
+%     pause(1.1);
+% end

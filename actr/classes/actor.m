@@ -7,6 +7,7 @@ classdef actor
         pconf_avg % average pconf of track
         pconf_angles   % vector per face confidence
         dsifts
+        appearing_frames % vector of frames IDs actor is appearing in
     end
     
     methods (Abstract)
@@ -24,6 +25,20 @@ classdef actor
         % + other: actor to compare with
         
         get_average_diff( obj, other )
+        %GET_CONFIDENCE returns the score a given track receives for
+        %resemblance to this actor [0, 1]
+        % INPUT
+        % + obj  : this
+        % + other: actor to compare with
+        
+        get_frontal_diff( obj, other )
+        %GET_CONFIDENCE returns the score a given track receives for
+        %resemblance to this actor [0, 1]
+        % INPUT
+        % + obj  : this
+        % + other: actor to compare with
+        
+        get_eyes_nose_diff( obj, other )
         %GET_CONFIDENCE returns the score a given track receives for
         %resemblance to this actor [0, 1]
         % INPUT
@@ -49,13 +64,16 @@ classdef actor
                img = imread(sprintf('./dump/%09d.jpg', image_num));
                face = imcrop(img, [face_rect(1) face_rect(3) face_rect(2) ...
                     - face_rect(1) face_rect(4) - face_rect(3)] );
+               if obj.faces(6, i) == 1
+                   face = face(:,end:-1:1,:);
+               end
                subplot(3 , 5, i);
                imshow(face);
                title(num2str(obj.get_angles(i)));
            end
         end
 
-        function [faces, dsifts, pconf_avg, pconf_angles] ...
+        function [faces, dsifts, pconf_avg, pconf_angles, appearing_frames] ...
                 = get_face_details( obj, track_facedets )
             pconf = cat(1, track_facedets.pconf);
             pconf_avg = sum(pconf) / length(pconf);
@@ -73,14 +91,53 @@ classdef actor
                 end
                 faces(1:4, i) = track_facedets( max_ind ).rect;
                 faces(5, i) = track_facedets( max_ind ).frame;
+                faces(6, i) = 0;
                 pconf_angles(i) = track_facedets( max_ind ).pconf;
                 % if profile, concat zeros
                 if length(track_facedets( max_ind ).dSIFT) == 1792
-                    dsifts(:, i)      = cat(1, track_facedets( max_ind ).dSIFT, ...
-                        zeros(1280, 1));
+                    temp = reshape(track_facedets( max_ind ).dSIFT, 128,14);
+                    % convert dsifts from profile to frontal:
+                    % 0 0 2 1
+                    % 0 3 4 0
+                    % 5 0 7 0
+                    % 0 0 9 8
+                    % 0 10 11 0
+                    % 12 0 14 0
+                    fd = cat(1, zeros(128, 1), zeros(128, 1), temp(:, 2), temp(:, 1),...
+                        zeros(128, 1), temp(:, 3), temp(:, 4), zeros(128, 1),...
+                        temp(:, 5), zeros(128, 1), temp(:, 7), zeros(128, 1),...
+                        zeros(128, 1), zeros(128, 1), temp(:, 9), temp(:, 8),...
+                        zeros(128, 1), temp(:, 10), temp(:, 11), zeros(128, 1),...
+                        temp(:, 12), zeros(128, 1), temp(:, 14), zeros(128, 1));
+                    
+                    dsifts(:, i)      = fd;
                 else
                     dsifts(:, i)      = track_facedets( max_ind ).dSIFT;
                 end
+            end
+            appearing_frames = cat(1, track_facedets.frame);
+            % mirror descriptors and images to find details for not
+            % existent angles
+            [faces, dsifts, pconf_angles] =  obj.mirror(faces, dsifts, pconf_angles);
+        end
+        
+        function [f, ds, p_angl] = mirror( obj, faces, dsifts, pconf_angles )
+            f = faces;
+            ds = dsifts;
+            p_angl = pconf_angles;
+            mir_i = [13 12 11 10 9 8 7 6 5 4 3 2 1];
+            a = pconf_angles ~= 0;
+            mirrored_a = fliplr(a')';
+            c = bsxfun(@and, mirrored_a, ~a);
+            indexes_to_write = find(c > 0);
+            for i = indexes_to_write
+                ds(:, i)  = ds(:, mir_i(i));
+                f(:, i)   = faces(:, mir_i(i));
+                % mirrored flag
+                f(6, i)   = 1;
+                % penalize mirrored face
+                p_angl(i) = pconf_angles(mir_i(i)) * 0.8;
+                '';
             end
         end
 

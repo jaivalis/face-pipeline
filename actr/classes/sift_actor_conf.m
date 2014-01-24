@@ -8,11 +8,13 @@ classdef sift_actor_conf < actor
         pconf_avg   % defined in actor
         pconf_angles       % defined in actor
         dsifts      % defined in actor
+        appearing_frames
     end
     
     methods
         function obj = sift_actor_conf( track_facedets )
-            [obj.faces, obj.dsifts, obj.pconf_avg, obj.pconf_angles] = obj.get_face_details( track_facedets );
+            [obj.faces, obj.dsifts, obj.pconf_avg, obj.pconf_angles, obj.appearing_frames]...
+                = obj.get_face_details( track_facedets );
             obj.appearance_time = length( track_facedets );
         end
         
@@ -40,7 +42,7 @@ classdef sift_actor_conf < actor
             b = (other.pconf_angles ~= 0);
             c = bsxfun(@and, a, b);
             common_angles = find(c > 0);
-            if isempty( common_angles )
+            if isempty( common_angles ) || obj.overlap( other )
                 diff = 200;
             else
                 t_sift = obj.dsifts(:, common_angles);
@@ -49,8 +51,12 @@ classdef sift_actor_conf < actor
                 result1 = sum(result);
                 % find min diff
                 diff = result1(find(result1 == min(result1)));
+                if length(diff) > 1
+                    diff = diff(1);
+                end
             end
             %for i = 1 : length( t_sift )
+
                 %TODO: weigth features differently
                 
             %end
@@ -61,13 +67,17 @@ classdef sift_actor_conf < actor
             b = (other.pconf_angles ~= 0);
             c = bsxfun(@and, a, b);
             common_angles = find(c > 0);
-            if isempty( common_angles )
+            if isempty( common_angles ) || obj.overlap( other )
                 diff = 200;
             else
+                % weight vector
+                % w = [ .3 .4 .5 .6 .9 .9 1 .9 .9 .6 .5 .4 .3 ];
+                w = [ .8 .7 .6 .5 .4 .3 .2 .3 .4 .5 .6 .7 .8 ];
                 t_sift = obj.dsifts(:, common_angles);
                 o_sift = other.dsifts(:, common_angles);
                 result = abs(t_sift - o_sift);
-                result1 = sum(result);
+                % weight angles by importance, assign more weight to front
+                result1 = sum(result) * w(common_angles)';
                 % normalize difference by common_angles
                 diff = sum(result1) / length(common_angles);
             end
@@ -75,6 +85,54 @@ classdef sift_actor_conf < actor
                 %TODO: weigth features differently
                 
             %end
+        end
+        
+        function diff = get_frontal_diff( obj, other )
+            if ( sum( obj.dsifts(:, 7) ) == 0 &&  sum( other.dsifts(:, 7) ) == 0 ) || ...
+                obj.overlap( other )
+                diff = 200;
+            else
+                t_sift = obj.dsifts(:, 7);
+                o_sift = other.dsifts(:, 7);
+                result = abs(t_sift - o_sift);
+                diff = sum(result);
+            end
+        end
+        
+        function diff = get_eyes_nose_diff( obj, other )
+            % only compare dsifts for eyes and nose
+            % siftdescriptors for eyes and nose are:
+            % [ 1 2 3 4 5 6 7 10 11 13 14 15 16 17 18 19 22 23 ]
+            temp_obj = reshape(obj.dsifts, 128, 24, 13);
+            temp_other = reshape(other.dsifts, 128, 24, 13);
+            eyes_nose_obj = cat(1, temp_obj(:, 1, :), temp_obj(:, 2, :), temp_obj(:, 3, :), temp_obj(:, 4, :)...
+                , temp_obj(:, 5, :), temp_obj(:, 6, :), temp_obj(:, 7, :), temp_obj(:, 10, :)...
+                , temp_obj(:, 11, :), temp_obj(:, 13, :), temp_obj(:, 14, :), temp_obj(:, 15, :)...
+                , temp_obj(:, 16, :), temp_obj(:, 17, :), temp_obj(:, 18, :), temp_obj(:, 19, :)...
+                , temp_obj(:, 22, :), temp_obj(:, 23, :));
+            eyes_nose_other = cat(1, temp_other(:, 1, :), temp_other(:, 2, :), temp_other(:, 3, :), temp_other(:, 4, :)...
+                , temp_other(:, 5, :), temp_other(:, 6, :), temp_other(:, 7, :), temp_other(:, 10, :)...
+                , temp_other(:, 11, :), temp_other(:, 13, :), temp_other(:, 14, :), temp_other(:, 15, :)...
+                , temp_other(:, 16, :), temp_other(:, 17, :), temp_other(:, 18, :), temp_other(:, 19, :)...
+                , temp_other(:, 22, :), temp_other(:, 23, :));
+            a = (obj.pconf_angles ~= 0);
+            b = (other.pconf_angles ~= 0);
+            c = bsxfun(@and, a, b);
+            common_angles = find(c > 0);
+            if isempty( common_angles ) || obj.overlap( other )
+                diff = 200;
+            else
+                t_sift = eyes_nose_obj(:, 1, common_angles);
+                o_sift = eyes_nose_other(:, 1, common_angles);
+                result = abs(t_sift - o_sift);
+                result1 = sum(result);
+                diff = result1(find(result1 == min(result1)));
+                if length(diff) > 1
+                    diff = diff(1);
+                end
+                % normalize difference by common_angles
+                % diff = sum(result1) / length(common_angles);
+            end
         end
         
         function obj = merge( obj, other )
@@ -91,6 +149,13 @@ classdef sift_actor_conf < actor
             % sum appearance time
             obj.appearance_time  = obj.appearance_time + ...
                         other.appearance_time;
+            % concat appearing frames
+            obj.appearing_frames = cat( 1, obj.appearing_frames,...
+                        other.appearing_frames );
+        end
+        
+        function c = overlap( obj, other )
+            c = ~ isempty(intersect(obj.appearing_frames, other.appearing_frames));
         end
         
     end

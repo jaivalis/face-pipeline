@@ -8,6 +8,7 @@ classdef actor
         pconf_angles   % vector per face confidence
         dsifts
         appearing_frames % vector of frames IDs actor is appearing in
+        track_id % vector of track id actor is appearing in
     end
     
     methods (Abstract)
@@ -73,8 +74,8 @@ classdef actor
            end
         end
 
-        function [faces, dsifts, pconf_avg, pconf_angles, appearing_frames] ...
-                = get_face_details( obj, track_facedets )
+        function [faces, dsifts, pconf_avg, pconf_angles, appearing_frames, track_id] ...
+                = get_face_details( obj, track_facedets, shot_id )
             pconf = cat(1, track_facedets.pconf);
             pconf_avg = sum(pconf) / length(pconf);
             
@@ -116,6 +117,8 @@ classdef actor
                 end
             end
             appearing_frames = cat(1, track_facedets.frame);
+            track_id(1)      = shot_id;
+            track_id(2)      = track_facedets(1).track;
             % mirror descriptors and images to find details for not
             % existent angles
             [faces, dsifts, pconf_angles] =  obj.mirror(faces, dsifts, pconf_angles);
@@ -158,34 +161,20 @@ classdef actor
 
         function index = get_index(obj, head_pose)
             switch head_pose
-                case -90
-                    index = 1;
-                case -75
-                    index = 2;
-                case -60
-                    index = 3;
-                case -45
-                    index = 4;
-                case -30
-                    index = 5;
-                case -15
-                    index = 6;
-                case 0
-                    index = 7;
-                case 15
-                    index = 8;
-                case 30
-                    index = 9;
-                case 45
-                    index = 10;
-                case 60
-                    index = 11;
-                case 75
-                    index = 12;
-                case 90
-                    index = 13;
-                otherwise
-                index = -1;
+                case -90,  index = 1;
+                case -75,  index = 2;
+                case -60,  index = 3;
+                case -45,  index = 4;
+                case -30,  index = 5;
+                case -15,  index = 6;
+                case 0,    index = 7;
+                case 15,   index = 8;
+                case 30,   index = 9;
+                case 45,   index = 10;
+                case 60,   index = 11;
+                case 75,   index = 12;
+                case 90,   index = 13;
+                otherwise, index = -1;
             end
         end
         
@@ -206,6 +195,20 @@ classdef actor
                 case 13,     head_pose = 90;
                 otherwise,   head_pose = -1;
             end
+        end
+        
+        function face = get_representative( obj, angle )
+           index = obj.get_index( angle );
+           if obj.faces(5, index) == 0
+               'b';
+           end
+           img = imread(sprintf('./dump/%09d.jpg', obj.faces(5, index)));
+           face_rect = obj.faces(1:4, index);
+           face = imcrop(img, [face_rect(1) face_rect(3) face_rect(2) ...
+                - face_rect(1) face_rect(4) - face_rect(3)] );
+           if obj.faces(6, index) == 1
+               face = face(:,end:-1:1,:);
+           end
         end
 
     end

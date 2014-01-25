@@ -9,12 +9,14 @@ classdef sift_actor_conf < actor
         pconf_angles       % defined in actor
         dsifts      % defined in actor
         appearing_frames
+        track_id
     end
     
     methods
-        function obj = sift_actor_conf( track_facedets )
-            [obj.faces, obj.dsifts, obj.pconf_avg, obj.pconf_angles, obj.appearing_frames]...
-                = obj.get_face_details( track_facedets );
+        function obj = sift_actor_conf( track_facedets, shot_id )
+            [obj.faces, obj.dsifts, obj.pconf_avg, obj.pconf_angles, ...
+                obj.appearing_frames, obj.track_id]...
+                = obj.get_face_details( track_facedets, shot_id );
             obj.appearance_time = length( track_facedets );
         end
         
@@ -136,10 +138,22 @@ classdef sift_actor_conf < actor
         end
         
         function obj = merge( obj, other )
+%             for i = 1:size( other.track_id, 1 )
+%                 if  other.track_id(i,1) == 4 && other.track_id(i,2) == 2
+%                     'a';
+%                 end
+%             end
+%             
+%             for i = 1:size( obj.track_id, 1 )
+%                 if  obj.track_id(i,1) == 4 && obj.track_id(i,2) == 2
+%                     'a';
+%                 end
+%             end
             % merge sifts
             % savedisifts of face with higher confidence
             for i = 1 : length( obj.pconf_angles )
-                if obj.pconf_angles(i) < other.pconf_angles(i)
+                if obj.pconf_angles(i) < other.pconf_angles(i) && ...
+                        other.pconf_angles(i) ~= 0
                     % keep other(i)
                     obj.pconf_angles(i) = other.pconf_angles(i);
                     obj.faces(:, i)     = other.faces(:, i);
@@ -152,6 +166,7 @@ classdef sift_actor_conf < actor
             % concat appearing frames
             obj.appearing_frames = cat( 1, obj.appearing_frames,...
                         other.appearing_frames );
+            obj.track_id = cat( 1, obj.track_id, other.track_id );
         end
         
         function c = overlap( obj, other )

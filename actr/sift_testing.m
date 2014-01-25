@@ -47,7 +47,7 @@ for i = 1:length(shots)
             case 'siftactor'
                 actor_candidate = sift_actor(facedets_M);
             case 'siftactor_conf'
-                actor_candidate = sift_actor_conf(facedets_M);
+                actor_candidate = sift_actor_conf(facedets_M, i);
             case 'siftactor_average'
                 actor_candidate = sift_actor_average(facedets_M);
             otherwise
@@ -166,11 +166,11 @@ end
 fprintf('done')
 
 %%
-for r = 1:size(merged_actors, 2)
-    clf;
-    merged_actors(r).show_faces();
-    pause(1.1);
-end
+% for r = 1:size(merged_actors, 2)
+%     clf;
+%     merged_actors(r).show_faces();
+%     pause(1.1);
+% end
 %%
 % figure;
 % for r = 1:size(discarded, 2)
@@ -178,3 +178,6 @@ end
 %     discarded(r).show_faces();
 %     pause(1.1);
 % end
+
+%%
+generate_output( actors, 'dump', 'results' )

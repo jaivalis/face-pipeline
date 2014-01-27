@@ -21,35 +21,39 @@ function generate_output( actors, dump_string, result_dir )
         uframes = unique( frames );
         
         for j = 1 : length(uframes)
+            % clf;
             a = get_actors( actors, uframes(j) );
             if isempty(a)   % discarded actor
                 continue;
             end
             img = imread(sprintf('dump/%09d.jpg', uframes(j)));
-            imshow(img);
             for l = 1 : length(a)
+                frame = uframes(j);
                 actor = a(l);
                 
                 shots_           = actor.track_id(:, 1);
                 ind              = find( shots_ == i );
                 actr_track       = actor.track_id( ind, 2 );
-                tmp              = find(frames == uframes(j));
+                tmp              = find(frames == frame);
                 fds              = facedets(tmp);
                 trs              = cat(1, fds.track);
                 fd_trck          = fds(find(trs == actr_track));
                 angle            = fd_trck.head_pose;
                 rep              = actor.get_representative( angle );
                 face_rect(:, l)  = fd_trck.rect;
-                img = stitch(img, actor, rep, face_rect, l, length(a));
+                
             end
             imshow(img);
+            rtzhn = num2str(uframes(j));
+            title(rtzhn);
             hold on;
             for k = 1 : size(face_rect, 2)
                 rectangle('Position', [face_rect(1, k) face_rect(3, k) face_rect(2, k) ...
                     - face_rect(1, k) face_rect(4, k) - face_rect(3, k)] );
             end
             hold off;
-            % pause(1/48);
+            pause(0.25);
+            clear face_rect;
         end
         
     end

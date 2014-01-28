@@ -1,19 +1,21 @@
 function image = stitch(img, actor, rep, face_rect, l, num_a)
 %STITCH Summary of this function goes here
 %   Detailed explanation goes here
-    
-bck = imread('res/demo_dashboard.png');
-% resize img so it fits on bck
-res_img = imresize(img, [480, 640]);
 
-% place image on background:
-bck( 11:490, 11:650, :) = res_img;
+if l == 1
+    bck = imread('res/demo_dashboard.png');
+    % resize img so it fits on bck
+    res_img = imresize(img, [480, 640]);
+
+    % place image on background:
+    bck( 11:490, 11:650, :) = res_img;
+else
+    bck = img;
+end
 
 % place actor on background
 top_h    = 80;
-% bottom_h = 460;
-% left_w   = 800;
-% right_w  = 830;
+
 res_rep = imresize( rep, [60, 40] );
 start_h = top_h * l + (l-1)*20;
 

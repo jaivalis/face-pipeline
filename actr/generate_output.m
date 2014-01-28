@@ -27,6 +27,7 @@ function generate_output( actors, dump_string, result_dir )
                 continue;
             end
             img = imread(sprintf('dump/%09d.jpg', uframes(j)));
+            [h, w, ~] = size(img);
             for l = 1 : length(a)
                 frame = uframes(j);
                 actor = a(l);
@@ -42,14 +43,24 @@ function generate_output( actors, dump_string, result_dir )
                 rep              = actor.get_representative( angle );
                 face_rect(:, l)  = fd_trck.rect;
                 
+                img = stitch(img, actor, rep, face_rect, l, length(a));
             end
             imshow(img);
             rtzhn = num2str(uframes(j));
             title(rtzhn);
-            hold on;
+            hold on;                
+            h_ratio = 480 / h;
+            w_ratio = 640 / w;
+            
             for k = 1 : size(face_rect, 2)
-                rectangle('Position', [face_rect(1, k) face_rect(3, k) face_rect(2, k) ...
-                    - face_rect(1, k) face_rect(4, k) - face_rect(3, k)] );
+                new_1 = floor(face_rect(1, k)*w_ratio) + 11;
+                new_2 = floor(face_rect(2, k)*w_ratio) + 11;
+                new_3 = floor(face_rect(3, k)*w_ratio) + 11;
+                new_4 = floor(face_rect(4, k)*h_ratio) + 11;
+                width  = new_2 - new_1;
+                height = new_4 - new_3;
+                
+                rectangle('Position', [new_1, new_3, width, height]);
             end
             hold off;
             pause(0.25);

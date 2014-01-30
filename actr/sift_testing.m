@@ -31,7 +31,11 @@ for i = 1:length(shots)
     s2 = shots(2, i);
 
     % load facedets of this shot
-    load(fullfile(result_dir,sprintf('%09d_%09d_facedets.mat', s1, s2)));
+    facedetfname = sprintf('%09d_%09d_facedets.mat', s1, s2);
+    if ~exist(fullfile(result_dir, facedetfname), 'file')
+        continue;
+    end
+    load(fullfile(result_dir, facedetfname));
 
     track = cat(1, facedets.track);
     utrack = unique(track);
@@ -83,16 +87,18 @@ for i = 1:length(shots)
     % end of shot
 end
 
-diff_types_params = [ 37, 4;
-                      16, 7;
-                      15, 8;
+diff_types_params = [ 39, 4;
+                      55, 4;
+                      35, 7;
+                      20, 1;
                        0, 0];
 diff_types = [ 'min-min';
-               'average';
                'frontal';
+               'average';
+               'weights';
                'eyenose'];
 
-for diff_type = 1 : size(diff_types, 1)
+for diff_type = 2 :  size(diff_types, 1)
 
     if strcmp(learning, 'offline')
         num_actors = length(actors);
@@ -165,12 +171,15 @@ for diff_type = 1 : size(diff_types, 1)
 end
 fprintf('done')
 
-%%
-% for r = 1:size(merged_actors, 2)
-%     clf;
-%     merged_actors(r).show_faces();
-%     pause(1.1);
-% end
+%% Annotation
+dump_dir = 'dump';
+prompt = 'Name: ';
+for r = 1:size(actors, 2)
+    clf;
+    actors(r).show_faces(dump_dir);
+    % actors(r).name = input(prompt, 's');
+    pause(1.4);
+end
 %%
 % figure;
 % for r = 1:size(discarded, 2)
@@ -179,5 +188,16 @@ fprintf('done')
 %     pause(1.1);
 % end
 
+%% Output
+for x = 1 : length(actors)
+    name = actors(x).name;
+    time = actors(x).appearance_time;
+    if ismember(names, name)
+        
+    else
+        
+    end
+end
+
 %%
-generate_output( actors, 'dump', 'results' )
+generate_output( actors, dump_dir, 'results' )

@@ -54,7 +54,7 @@ classdef actor
     end
     
     methods (Access = public)
-        function show_faces( obj )
+        function show_faces( obj, dump_dir )
         %SHOW_FACES Plot the faces used for training the actor classifier
            for i = 1:length(obj.faces)
                face_rect = obj.faces(1:4, i);
@@ -62,7 +62,7 @@ classdef actor
               if image_num == 0
                    continue;
                end
-               img = imread(sprintf('./dump/%09d.jpg', image_num));
+               img = imread(fullfile(dump_dir, sprintf('%09d.jpg', image_num)));
                face = imcrop(img, [face_rect(1) face_rect(3) face_rect(2) ...
                     - face_rect(1) face_rect(4) - face_rect(3)] );
                if obj.faces(6, i) == 1
@@ -79,7 +79,7 @@ classdef actor
             pconf = cat(1, track_facedets.pconf);
             pconf_avg = sum(pconf) / length(pconf);
             
-            pconf_angles = zeros(13, 1);
+            pconf_angles = ones(13, 1) * -200;
             faces = zeros(5, 13);
             dsifts = zeros(3072, 13);
             
@@ -129,7 +129,7 @@ classdef actor
             ds = dsifts;
             p_angl = pconf_angles;
             mir_i = [13 12 11 10 9 8 7 6 5 4 3 2 1];
-            a = pconf_angles ~= 0;
+            a = pconf_angles ~= -200;
             mirrored_a = fliplr(a')';
             c = bsxfun(@and, mirrored_a, ~a);
             indexes_to_write = find(c > 0);
@@ -150,6 +150,10 @@ classdef actor
             indexes   = zeros(1, 13) - 1;
 
             for i = 1 : length(track_facedets)
+                if length(track_facedets) == 16
+                    'b';
+                end
+                    
                 index = obj.get_index( track_facedets(i, 1).head_pose );
 
                 if max_confs( index ) < track_facedets(i, 1).pconf
@@ -199,6 +203,9 @@ classdef actor
         
         function face = get_representative( obj, angle )
            index = obj.get_index( angle );
+           if obj.faces(5, index) == 0
+               'b';
+           end
            if obj.faces(5, index) == 0
                'b';
            end

@@ -17,9 +17,11 @@ function diff = get_diff_matrix( all_models, diff_type )
                 elseif strcmp(diff_type, 'average');
                     diff( i, j ) = all_models(i).get_average_diff( all_models(j) );
                 elseif strcmp(diff_type, 'frontal');
-                    diff( i, j ) = all_models(i).get_average_diff( all_models(j) );
+                    diff( i, j ) = all_models(i).get_frontal_diff( all_models(j) );
                 elseif strcmp(diff_type, 'eyenose');
                     diff( i, j ) = all_models(i).get_eyes_nose_diff( all_models(j) );
+                elseif strcmp(diff_type, 'weights');
+                    diff( i, j ) = all_models(i).get_weighted_average_diff( all_models(j) );
                 end
 			end
 		end

@@ -98,7 +98,7 @@ diff_types = [ 'min-min';
                'weights';
                'eyenose'];
 
-for diff_type = 2 :  size(diff_types, 1)
+for diff_type = 1 :  size(diff_types, 1)
 
     if strcmp(learning, 'offline')
         num_actors = length(actors);
@@ -177,27 +177,48 @@ prompt = 'Name: ';
 for r = 1:size(actors, 2)
     clf;
     actors(r).show_faces(dump_dir);
-    % actors(r).name = input(prompt, 's');
-    pause(1.4);
+    actors(r).name = input(prompt, 's');
+%     pause(1.4);
 end
-%%
-% figure;
-% for r = 1:size(discarded, 2)
-%     clf;
-%     discarded(r).show_faces();
-%     pause(1.1);
-% end
 
 %% Output
+f = figure;
+index = 1;
 for x = 1 : length(actors)
     name = actors(x).name;
     time = actors(x).appearance_time;
-    if ismember(names, name)
-        
+    face_rect = actors(x).faces(1:4, 7);
+    if exist(sprintf('dump/%09d.jpg', actors(x).faces(5,7)))
+        img = imread(sprintf('dump/%09d.jpg', actors(x).faces(5,7)));
     else
+        img = imread(sprintf('dump/%09d.jpg', actors(x).faces(5,13)));
+        face_rect = actors(x).faces(1:4, 13);
+    end
+    face = imcrop(img, [face_rect(1) face_rect(3) face_rect(2) ...
+                    - face_rect(1) face_rect(4) - face_rect(3)] );
+    image = imresize(face, [60,40]);
+    if index == 1
+        names{1} = name;
+        times(1) = time;
+        images(1, :, :, :) = image;
+        index = index + 1;
+    elseif sum(ismember(names, name))>0
+        a = find(strcmp(names, name));
+        times(a) = times(a) + time; 
+    else
+        names{index} = name;
+        times(index) = time;
+        images(index, :, :, :) = image;
+        index = index + 1;
         
     end
 end
-
+% convert into seconds
+times = times / 48;
+h = bar(times, 0.4);
+set(gca, 'XTick', 1:max(times), 'XTickLabel', names);
+xlabel('Actors')
+ylabel('Appearance (seconds)')
+saveas(f, 'output.jpg');
 %%
-generate_output( actors, dump_dir, 'results' )
+generate_output_with_discarded( actors, discarded, dump_dir, 'results' )

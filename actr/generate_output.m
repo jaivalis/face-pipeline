@@ -1,4 +1,4 @@
-function generate_output( actors, dump_string, result_dir )
+function generate_output( actors, discarded, dump_string, result_dir )
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
     
@@ -48,9 +48,8 @@ function generate_output( actors, dump_string, result_dir )
                 img = stitch(img, 0, 0, bck, 0, 0);
                 cla;
                 imshow(img);
-                title(num2str(frame));
-                %saveas(f, sprintf('video/%09d.jpg', frame));
-                pause(0.05);
+                saveas(f, sprintf('video/%09d.jpg', frame));
+                %pause(0.05);
                 continue;
             end
             img = imread(sprintf('dump/%09d.jpg', frame));
@@ -91,8 +90,8 @@ function generate_output( actors, dump_string, result_dir )
                 set(box, 'FontSize', 10);
             end
             set(gca, 'position', [0 0 1 1], 'units', 'normalized');
-            %saveas(f, sprintf('video/%09d.jpg', frame));
-            pause(0.05);
+            saveas(f, sprintf('video/%09d.jpg', frame));
+            %pause(0.05);
             clear face_rect;
             
         end

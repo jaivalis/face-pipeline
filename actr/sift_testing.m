@@ -214,7 +214,7 @@ for x = 1 : length(actors)
     end
 end
 % convert into seconds
-times = times / 48;
+times = times / 25;
 h = bar(times, 0.4);
 set(gca, 'XTick', 1:max(times), 'XTickLabel', names);
 xlabel('Actors')
